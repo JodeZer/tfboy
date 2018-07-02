@@ -3,10 +3,13 @@ import pandas as pd
 import collections
 import numpy as np
 import tensorflow as tf
+
 COLUMN_TYPES = collections.OrderedDict([
-    ("f1", float),
-    ("f2", float),
-    ("y", float)
+    ("order_count", float),
+    ("customer_count", float),
+    ("amout", float),
+    ("prod_count", int),
+    ("score", float)
 ])
 
 def readData():
@@ -45,31 +48,34 @@ def make_dataset(batch_sz, x, y=None, shuffle=False, shuffle_buffer_size=1000):
 
 def main(argv):
 
-    (train_x,train_y), (test_x, test_y) = loaddata(yname="y")
+    (train_x,train_y), (test_x, test_y) = loaddata(yname="score")
 
     train_input_fn = make_dataset(100, train_x, train_y, True, 1000)
 
     test_input_fn = make_dataset(100, test_x, test_y, True, 1000)
 
     feature_columns = [ 
-        tf.feature_column.numeric_column(key="f1"),
-        tf.feature_column.numeric_column(key="f2")
+        tf.feature_column.numeric_column(key="order_count"),
+        tf.feature_column.numeric_column(key="customer_count"),
+        tf.feature_column.numeric_column(key="amout"),
+        tf.feature_column.numeric_column(key="prod_count")
     ]
 
     model = tf.estimator.LinearRegressor(feature_columns=feature_columns)
 
     model.train(input_fn=train_input_fn, steps=1000)
 
-    perdict(model)
+    evaluate(model,test_input_fn)
 
-    # eval_result = model.evaluate(input_fn=test_input_fn)
-
-    # #average_loss = eval_result["average_loss"]
-    # print(eval_result)
+    #perdict(model)
 
     wt_names = model.get_variable_names()
     for name in wt_names:
         print("{}:{}".format(name, model.get_variable_value(name)))
+
+def evaluate(model, testFn):
+    eval_result = model.evaluate(input_fn=testFn)
+    print(eval_result)
 
 def perdict(model):
     input_dict = {

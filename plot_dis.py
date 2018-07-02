@@ -4,40 +4,50 @@ import numpy as np
 import math
 import collections
 
+SHOPID = 0
 ORDER_COUNT = 2
 BUYER_COUNT = 3
 AMOUNT = 4
-IGNORE = 7
-
+OVERTIME_RATE = 5
+CANCEL_RATE = 6
+DISPATCH_AGE = 7
 # MARCO
 def log2(val):
-    return int(math.log2(val))
+    return math.log2(val)
 
 def normal(val):
-    return int(val)
+    return val
+
+def log10(val):
+    return math.log10(val)
 
 COLUMNS = collections.OrderedDict(
     [
-        (ORDER_COUNT, log2),
-        (BUYER_COUNT, log2),
-        (AMOUNT, log2),
+        (ORDER_COUNT, [log2, lambda x:float(x), lambda x: False]),
+        (BUYER_COUNT, [log2, lambda x:float(x), lambda x: False]),
+        (AMOUNT, [log2, lambda x:float(x), lambda x: False]),
+        (OVERTIME_RATE, [log2, lambda x:float(x)*100+0.01, lambda x: x>0.5*100]), 
+        (CANCEL_RATE, [log2, lambda x:float(x)*100+0.01,lambda x: x > 0.10*100]), 
+        (DISPATCH_AGE, [log2, lambda x:float(x),lambda x: False]), 
     ]
 )
 
-def loadDataInColumn(fileName):
+def loadDataInColumn(fileName, columns):
     ret = []
-    for i in range(len(COLUMNS.keys())):
+    for i in range(len(columns.keys())):
         ret.append([])
     with open(fileName, 'rt') as file:
         reader = csv.reader(file)
-        for i, row in enumerate(reader):
-            if row[IGNORE] == "I":
-                continue
-            for i, ind in enumerate(COLUMNS.keys()):
-                val = int(row[ind])
-                if shit_filter(val):
+        for row in reader:
+            for i, ind in enumerate(columns.keys()):
+                defList = columns.get(ind)
+                val = defList[1](row[ind])
+                if defList[2](val):
+                    #print("ignore")
                     continue
-                ret[i].append(COLUMNS.get(ind)(val))
+                val = defList[0](val)
+                #print("origin {}, log2 {}".format(defList[1](row[ind]),val))
+                ret[i].append(val)
     return ret
 
 def shit_filter(val):
@@ -61,7 +71,7 @@ def intervalAsix(mini, maxi, count):
     ret = [mini]*count
     gap = float(maxi -mini)/ count
     for i in range(count):
-        ret[i] = i*gap
+        ret[i] = mini+i*gap+0.5*gap
     return ret
 
 def incArray(length):
@@ -76,18 +86,23 @@ def plotXY(rawData):
         (x, y) = t
         print(x)
         print(y)
+        #print(stat_avg_dev(x))
+        print()
         plt.subplot(len(rawData), 1, i+1)
         plt.plot(x, y)
     plt.show()
 
-
-def main():
-    data = loadDataInColumn("hotsale_score_right.csv")
-    
+def drawAxisData(data, gap):
     drawData = []
     for row in data:
-        (x, y) = calXYAxis(row, 6)
+        (x, y) = calXYAxis(row, gap)
         drawData.append((x,y))
+    return drawData
+
+def main():
+    data = loadDataInColumn("hotsale_score_cat.csv", COLUMNS)
+    #print(data)
+    drawData = drawAxisData(data, 50)
        
     plotXY(drawData)
 
