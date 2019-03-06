@@ -17,25 +17,27 @@ print("expand data done")
 train_labels = mnist_data.train.labels[:SampleSize]
 train_imageData = train_imageData.reshape(-1, 224,224,1)
 
-dataset = utils.DataSet(train_imageData, train_labels, testRate= 0.3, batchSize=batchSize)
+dataset = utils.DataSet(train_imageData, train_labels, testRate= 0.05, batchSize=batchSize)
 learnCurve = utils.learnCurve()
 vgg = model.VGG11()
 
-data = dataset.getNextBatch()
+#data = dataset.getNextBatch()
 
 with tf.Session() as sess:
     init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
     sess.run(init_op)
-    for ep in range(5):
+    for ep in range(1, 11):
+        data = dataset.getNextBatch()
         while data != None:
             print("start epoch:{}, iter:{}".format(ep, dataset.iter))
             vgg.fit(sess, data[0], data[1])
             batchAcc = vgg.call_accuracy(sess, data[0], data[1])
             print("fit epoch:{}, iter:{}, batchAcc:{}".format(ep, dataset.iter, batchAcc))
-            trainAcc = vgg.call_accuracy(sess, dataset.trainX, dataset.trainY)
+            #trainAcc = vgg.call_accuracy(sess, dataset.trainX, dataset.trainY)
             testAcc = vgg.call_accuracy(sess, dataset.testX, dataset.testY)
-            print("done epoch:{}, iter:{},{},{} ".format(ep, dataset.iter, trainAcc[0],testAcc[0]))
-            learnCurve.append(0, trainAcc[0], testAcc[0])
+            print("done epoch:{}, iter:{},{},{} ".format(ep, dataset.iter, batchAcc,testAcc))
+            learnCurve.append(0, batchAcc, testAcc)
+            data = dataset.getNextBatch()
         dataset.nextEpoch()
 
 
