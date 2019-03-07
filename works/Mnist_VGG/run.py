@@ -48,7 +48,6 @@ with tf.Session() as sess:
             learnCurve.append(0, batchAcc, testAcc)
             data = dataset.getNextBatch()
             writer.close()
-            assert 1 == 2
         dataset.nextEpoch()
 
 

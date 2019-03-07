@@ -15,10 +15,11 @@ train_imageData = mnist_data.train.images.reshape(mnist_data.train.images.shape[
 print("start expand data")
 #train_imageData = utils.BatchImageExpand(train_imageData[:SampleSize], 224)
 print("expand data done")
-train_labels = mnist_data.train.labels[:SampleSize]
+train_labels = mnist_data.train.labels
 #train_imageData = train_imageData.reshape(-1, 224,224,1)
 
 dataset = utils.DataSet(train_imageData, train_labels, testRate= 0.05, batchSize=batchSize)
+print("train Size:{}, test Size:{}".format(dataset.trainSize, dataset.testSize))
 learnCurve = utils.learnCurve()
 cnn = model.NaiveCNN()
 
@@ -41,7 +42,8 @@ with tf.Session() as sess:
             cnn.fit(sess, data[0], data[1])
             batchAcc = cnn.call_accuracy(sess, data[0], data[1])
             print("fit epoch:{}, iter:{}, batchBef:{}, batchAcc:{}".format(ep, dataset.iter, batchAccBef, batchAcc))
-            testAcc = 0
+            print("train Size:{}, test Size:{}".format(len(dataset.testX), len(dataset.testY)))
+            testAcc = cnn.call_accuracy(sess, dataset.testX, dataset.testY)
             print("done epoch:{}, iter:{},{},{} ".format(ep, dataset.iter, batchAcc,testAcc))
             learnCurve.append(0, batchAcc, testAcc)
             data = dataset.getNextBatch()
