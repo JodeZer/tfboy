@@ -5,22 +5,22 @@ import tensorflow as tf
 import numpy as np
 
 # define
-SampleSize = 1000 #  all data
-batchSize = 16
+SampleSize = 10000 #  all data
+batchSize = 32
 # prepare data
 mnist_data = mnist.input_data.read_data_sets("MNIST_data", one_hot=True)
 
-train_imageData = mnist_data.train.images.reshape(mnist_data.train.images.shape[0], 28, 28)
+train_imageData = mnist_data.train.images.reshape(mnist_data.train.images.shape[0], 28, 28, 1)
 
 print("start expand data")
-train_imageData = utils.BatchImageExpand(train_imageData[:SampleSize], 224)
+#train_imageData = utils.BatchImageExpand(train_imageData[:SampleSize], 224)
 print("expand data done")
 train_labels = mnist_data.train.labels[:SampleSize]
-train_imageData = train_imageData.reshape(-1, 224,224,1)
+#train_imageData = train_imageData.reshape(-1, 224,224,1)
 
 dataset = utils.DataSet(train_imageData, train_labels, testRate= 0.05, batchSize=batchSize)
 learnCurve = utils.learnCurve()
-vgg = model.VGG11()
+cnn = model.NaiveCNN()
 
 #data = dataset.getNextBatch()
 
@@ -36,23 +36,17 @@ with tf.Session() as sess:
             #     print(np.argmax(data[1][i]))
             # print(data[1])
             # assert 2 == 1
-            batchAccBef = vgg.call_accuracy(sess, data[0], data[1])
+            batchAccBef = cnn.call_accuracy(sess, data[0], data[1])
             print("start epoch:{}, iter:{}".format(ep, dataset.iter))
-            vgg.fit(sess, data[0], data[1])
-            batchAcc = vgg.call_accuracy(sess, data[0], data[1])
+            cnn.fit(sess, data[0], data[1])
+            batchAcc = cnn.call_accuracy(sess, data[0], data[1])
             print("fit epoch:{}, iter:{}, batchBef:{}, batchAcc:{}".format(ep, dataset.iter, batchAccBef, batchAcc))
-            #trainAcc = vgg.call_accuracy(sess, dataset.trainX, dataset.trainY)
-            #testAcc = vgg.call_accuracy(sess, dataset.testX, dataset.testY)
             testAcc = 0
             print("done epoch:{}, iter:{},{},{} ".format(ep, dataset.iter, batchAcc,testAcc))
             learnCurve.append(0, batchAcc, testAcc)
             data = dataset.getNextBatch()
             writer.close()
-            assert 1 == 2
         dataset.nextEpoch()
-
-
-#learnCurve.plot()
 
 
 
